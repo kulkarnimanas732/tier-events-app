@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -6,12 +5,15 @@ import { useAuth } from '@clerk/nextjs';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 export function useSupabaseWithAuth(): SupabaseClient | null {
-  const { getToken } = useAuth();
+  const { getToken, isSignedIn } = useAuth();
   const [client, setClient] = useState<SupabaseClient | null>(null);
 
   useEffect(() => {
     const init = async () => {
-      const token = await getToken({ template: "supabase" });
+      if (!isSignedIn) return;
+
+      const token = await getToken({ template: 'supabase' });
+      if (!token) return;
 
       const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,7 +23,7 @@ export function useSupabaseWithAuth(): SupabaseClient | null {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         }
       );
 
@@ -29,8 +31,7 @@ export function useSupabaseWithAuth(): SupabaseClient | null {
     };
 
     init();
-  }, [getToken]);
+  }, [getToken, isSignedIn]);
 
   return client;
 }
-
