@@ -23,30 +23,29 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const { user, isSignedIn } = useUser();
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      setLoading(true);
-      const supabase = isSignedIn ? authSupabase : supabasePublic;
+  
+useEffect(() => {
+  const fetchEvents = async () => {
+    setLoading(true);
+    const supabase = isSignedIn ? authSupabase : supabasePublic;
 
-      if (!supabase) return;
+    if (!supabase) return;
 
-      const query = supabase.from('events').select('*').order('event_date', { ascending: false });
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .order('event_date', { ascending: false });
 
-      // If not logged in, only fetch Free tier events
-      const { data, error } = isSignedIn
-        ? await query
-        : await query.eq('tier', 'free');
+    if (error) {
+      console.error('Error fetching events:', error.message);
+    } else {
+      setEvents(data || []);
+    }
+    setLoading(false);
+  };
 
-      if (error) {
-        console.error('Error fetching events:', error.message);
-      } else {
-        setEvents(data || []);
-      }
-      setLoading(false);
-    };
-
-    fetchEvents();
-  }, [authSupabase, isSignedIn]);
+  fetchEvents();
+}, [authSupabase, isSignedIn]);
 
   return (
     <main className="min-h-screen bg-gray-50">
